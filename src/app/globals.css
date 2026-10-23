@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Pravara Rural Engineering College Pastel Palette */
+    --background: 215 38% 97%;
+    --foreground: 220 45% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 45% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 45% 13%;
+
+    /* Academic Pravara Deep Sapphire Blue */
+    --primary: 217 65% 32%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Soft Pastel Slate / Ivory Secondary */
+    --secondary: 214 45% 94%;
+    --secondary-foreground: 217 65% 25%;
+
+    --muted: 215 30% 94%;
+    --muted-foreground: 218 16% 45%;
+
+    /* Pravara Golden Saffron Accent */
+    --accent: 38 90% 94%;
+    --accent-foreground: 32 85% 30%;
+
+    --destructive: 350 75% 54%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 216 26% 89%;
+    --input: 216 26% 89%;
+    --ring: 217 65% 32%;
+    --radius: 0.75rem;
+
+    /* Custom Pastel Accent Variables */
+    --pastel-blue-bg: 214 70% 95%;
+    --pastel-blue-text: 217 65% 32%;
+    --pastel-amber-bg: 42 90% 93%;
+    --pastel-amber-text: 32 85% 30%;
+    --pastel-emerald-bg: 155 60% 93%;
+    --pastel-emerald-text: 160 80% 26%;
+    --pastel-rose-bg: 350 75% 94%;
+    --pastel-rose-text: 350 70% 38%;
+    --pastel-purple-bg: 260 65% 95%;
+    --pastel-purple-text: 260 60% 40%;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 213 31% 94%;
+    --card: 222 45% 11%;
+    --card-foreground: 213 31% 94%;
+    --popover: 222 45% 11%;
+    --popover-foreground: 213 31% 94%;
+
+    --primary: 214 90% 64%;
+    --primary-foreground: 222 47% 8%;
+
+    --secondary: 220 35% 18%;
+    --secondary-foreground: 213 31% 94%;
+
+    --muted: 220 35% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 38 80% 20%;
+    --accent-foreground: 42 95% 85%;
+
+    --destructive: 350 65% 45%;
+    --destructive-foreground: 213 31% 94%;
+
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 214 90% 64%;
+
+    --pastel-blue-bg: 217 50% 18%;
+    --pastel-blue-text: 214 90% 80%;
+    --pastel-amber-bg: 38 50% 18%;
+    --pastel-amber-text: 42 90% 80%;
+    --pastel-emerald-bg: 160 40% 16%;
+    --pastel-emerald-text: 155 80% 75%;
+    --pastel-rose-bg: 350 40% 18%;
+    --pastel-rose-text: 350 80% 80%;
+    --pastel-purple-bg: 260 40% 18%;
+    --pastel-purple-text: 260 80% 80%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom Soft Pastel Badges & Chips */
+.badge-pastel-blue {
+  background-color: hsl(var(--pastel-blue-bg));
+  color: hsl(var(--pastel-blue-text));
+  border: 1px solid hsl(var(--pastel-blue-text) / 0.15);
+}
+
+.badge-pastel-amber {
+  background-color: hsl(var(--pastel-amber-bg));
+  color: hsl(var(--pastel-amber-text));
+  border: 1px solid hsl(var(--pastel-amber-text) / 0.15);
+}
+
+.badge-pastel-emerald {
+  background-color: hsl(var(--pastel-emerald-bg));
+  color: hsl(var(--pastel-emerald-text));
+  border: 1px solid hsl(var(--pastel-emerald-text) / 0.15);
+}
+
+.badge-pastel-rose {
+  background-color: hsl(var(--pastel-rose-bg));
+  color: hsl(var(--pastel-rose-text));
+  border: 1px solid hsl(var(--pastel-rose-text) / 0.15);
+}
+
+.badge-pastel-purple {
+  background-color: hsl(var(--pastel-purple-bg));
+  color: hsl(var(--pastel-purple-text));
+  border: 1px solid hsl(var(--pastel-purple-text) / 0.15);
+}

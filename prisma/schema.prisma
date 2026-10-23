@@ -1,0 +1,327 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  FACULTY
+  ADMIN
+}
+
+enum StudentType {
+  INTERNAL // Pravara Rural Engineering College (PREC Loni)
+  EXTERNAL // Outside Universities & Colleges
+}
+
+enum CommitteeRole {
+  OWNER // Highest Democratic Level: Transfer Ownership, Delete, Manage Team
+  CO_MANAGER // Level 2: Create/Edit Hackathons, Manage Check-ins, Broadcast, Judging
+  COORDINATOR // Level 3: Operational Check-in Desk & Team Assistance
+}
+
+enum LocationType {
+  IN_PERSON
+  ONLINE
+  HYBRID
+}
+
+enum HackathonAudience {
+  ALL_COLLEGES // Open to outside colleges as well as PREC Loni students
+  INTERNAL_ONLY // Restricted exclusively to PREC Loni students
+}
+
+enum HackathonStatus {
+  DRAFT
+  PUBLISHED
+  REGISTRATION_OPEN
+  HACKING_LIVE
+  JUDGING
+  COMPLETED
+}
+
+enum RegistrationStatus {
+  PENDING
+  ACCEPTED
+  CHECKED_IN
+  REJECTED
+}
+
+enum TeamRole {
+  LEADER
+  MEMBER
+}
+
+enum AnnouncementCategory {
+  URGENT
+  SCHEDULE
+  LOGISTICS
+  MENTORSHIP
+  GENERAL
+}
+
+model User {
+  id             String      @id @default(cuid())
+  name           String
+  email          String      @unique
+  passwordHash   String?
+  role           UserRole    @default(STUDENT)
+  studentType    StudentType @default(INTERNAL)
+  collegeName    String      @default("Pravara Rural Engineering College, Loni")
+  collegeRollNo  String? // PRN or University Roll Number
+  department     String?
+  graduationYear Int?
+  collegeCity    String?
+  collegeState   String?
+  avatar         String?
+  githubUrl      String?
+  linkedinUrl    String?
+  bio            String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  committeeMembers CommitteeMember[]
+  teamMembers      TeamMember[]
+  registrations    Registration[]
+  judgeScores      JudgeScore[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Committee {
+  id           String   @id @default(cuid())
+  name         String // e.g. "CESA - Computer Engineering Students Association"
+  slug         String   @unique
+  department   String // e.g. "Computer Engineering", "IT", "AI & DS"
+  description  String?  @db.Text
+  contactEmail String
+  logoUrl      String?
+  bannerUrl    String?
+  isVerified   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members    CommitteeMember[]
+  hackathons Hackathon[]
+
+  @@map("committees")
+}
+
+model CommitteeMember {
+  id          String        @id @default(cuid())
+  committeeId String
+  userId      String
+  role        CommitteeRole @default(COORDINATOR)
+  joinedAt    DateTime      @default(now())
+
+  committee Committee @relation(fields: [committeeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([committeeId, userId])
+  @@map("committee_members")
+}
+
+model Hackathon {
+  id          String    @id @default(cuid())
+  committeeId String
+  title       String
+  slug        String    @unique
+  tagline     String
+  description String    @db.Text
+  bannerUrl   String?
+  logoUrl     String?
+  department  String?   @default("Computer Engineering")
+  audience    HackathonAudience @default(ALL_COLLEGES)
+  
+  // Customization & Branding Settings
+  themeColor            String?   @default("sapphire") // sapphire, amber, emerald, lavender, coral
+  heroLayout            String?   @default("standard") // standard, split, minimal
+  allowSolo             Boolean   @default(true)
+  allowInterCollegeTeams Boolean   @default(true)
+  requireCollegeId      Boolean   @default(true)
+  requireGithub         Boolean   @default(false)
+  discordUrl            String?
+  supportContacts       Json?     @default("[]") // [{ name, role, phone, email }]
+  wifiDetails           String?   // Wi-Fi instructions / SSID
+  locationType          LocationType @default(IN_PERSON)
+  venue                 String?   @default("PREC Campus Central Computing Facility, Loni")
+
+  // Timeline
+  registrationStart DateTime
+  registrationEnd   DateTime
+  hackingStart      DateTime
+  hackingEnd        DateTime
+  minTeamSize       Int               @default(1)
+  maxTeamSize       Int               @default(4)
+  status            HackathonStatus   @default(DRAFT)
+
+  // Rich Builders
+  tracks             Json @default("[]") // [{ id, name, description, sponsor, prize, mentor }]
+  prizes             Json @default("[]") // [{ title, amount, perks, rank }]
+  scheduleMilestones Json @default("[]") // [{ day, time, title, description, phase }]
+  customQuestions    Json @default("[]") // [{ id, label, type, required, options }]
+  rules              String? @db.Text
+  faqs               Json?   @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  committee     Committee      @relation(fields: [committeeId], references: [id], onDelete: Cascade)
+  registrations Registration[]
+  teams         Team[]
+  submissions   Submission[]
+  announcements Announcement[]
+
+  @@map("hackathons")
+}
+
+model Team {
+  id              String   @id @default(cuid())
+  hackathonId     String
+  name            String
+  joinCode        String   @unique
+  leaderId        String
+  trackPreference String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hackathon     Hackathon      @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  members       TeamMember[]
+  registrations Registration[]
+  submission    Submission?
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model Registration {
+  id                  String             @id @default(cuid())
+  hackathonId         String
+  userId              String
+  teamId              String?
+  status              RegistrationStatus @default(ACCEPTED)
+  studentType         StudentType        @default(INTERNAL)
+  collegeName         String             @default("Pravara Rural Engineering College, Loni")
+  qrCodeSecret        String             @unique @default(cuid())
+  needsAccommodation  Boolean            @default(false)
+  customAnswers       Json?              @default("{}")
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  hackathon Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@unique([hackathonId, userId])
+  @@map("registrations")
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  hackathonId String
+  teamId      String   @unique
+  title       String
+  tagline     String
+  description String   @db.Text
+  demoUrl     String?
+  repoUrl     String?
+  videoUrl    String?
+  deckUrl     String?
+  track       String?
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hackathon Hackathon    @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  team      Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  scores    JudgeScore[]
+
+  @@map("submissions")
+}
+
+model JudgeScore {
+  id             String   @id @default(cuid())
+  submissionId   String
+  judgeId        String
+  criteriaScores Json     @default("{}")
+  totalScore     Float    @default(0)
+  feedback       String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  judge      User       @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, judgeId])
+  @@map("judge_scores")
+}
+
+model Announcement {
+  id          String               @id @default(cuid())
+  hackathonId String
+  title       String
+  content     String               @db.Text
+  category    AnnouncementCategory @default(GENERAL)
+  isPinned    Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+
+  hackathon Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+
+  @@map("announcements")
+}
